@@ -402,7 +402,7 @@ input[type=range]{padding:0;height:28px;accent-color:var(--g2);border:0;box-shad
 </style>
 <script>
 /* >>> PASTE your Apps Script Web App URL (the one ending in /exec) <<< */
-var API_URL = "https://script.google.com/a/macros/candeur.in/s/AKfycbzVesFuXZJeQqHZ9GamXDikVaaTJQgNS5Mt6oCy7A5k7AENxrQuxET-UOdnmelrNDaI3Q/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbzVesFuXZJeQqHZ9GamXDikVaaTJQgNS5Mt6oCy7A5k7AENxrQuxET-UOdnmelrNDaI3Q/exec";
 /* The https address of this same page once hosted (Netlify/GitHub Pages/Firebase). Used to send Apps Script users to the camera-enabled copy. */
 var HOSTED_URL = "";
 </script>
@@ -947,12 +947,18 @@ function api(fn) {
             (_a = google.script.run.withSuccessHandler(function (v) { clearTimeout(t); res(v); }).withFailureHandler(function (e) { clearTimeout(t); rej(e); }))[fn].apply(_a, a);
             return;
         }
-        if (!API_URL || API_URL.indexOf('http') !== 0) { rej(new Error('API_URL is not set in the page')); return; }
+        if (!API_URL || API_URL.indexOf('http') !== 0) { rej(new Error('API_URL is not set: open index.html and paste your Apps Script /exec link in the API_URL line')); return; }
         var ctl = new AbortController(), t2 = setTimeout(function () { return ctl.abort(); }, 60000);
         fetch(API_URL, { method: 'POST', redirect: 'follow', signal: ctl.signal, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: a }) })
-            .then(function (r) { return r.json(); })
-            .then(function (j) { clearTimeout(t2); if (j && j.ok) res(j.v); else rej(new Error((j && j.error) || 'Server error')); })
-            .catch(function (e) { clearTimeout(t2); rej(new Error(e && e.name === 'AbortError' ? 'Server timed out' : 'Server not reachable')); });
+            .then(function (r) { return r.text(); })
+            .then(function (txt) {
+                clearTimeout(t2);
+                var j = null;
+                try { j = JSON.parse(txt); } catch (x) { }
+                if (!j) { rej(new Error('Server replied with a web page, not data: redeploy SMART_CHECKS.js as a NEW version and set access to Anyone')); return; }
+                if (j.ok) res(j.v); else rej(new Error(j.error || 'Server error'));
+            })
+            .catch(function (e) { clearTimeout(t2); rej(new Error(e && e.name === 'AbortError' ? 'Server timed out' : 'Cannot reach the server: check the API_URL link and that access is set to Anyone')); });
     });
 }
 function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { return t.remove(); }, 2800); }
