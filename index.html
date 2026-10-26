@@ -961,10 +961,10 @@ var ago = function (d) { var m = Math.round((Date.now() - new Date(d)) / 6e4); r
 var statusBadge = function (s) { return "<span class=\"badge ".concat(s === 'ISSUE' ? 'issue' : 'ok', "\">").concat(esc(s), "</span>"); };
 var driveId = function (u) { return (String(u || '').match(/[-\w]{25,}/) || [])[0] || ''; };
 var LIBS = {
-    scan: { u: 'lib/html5-qrcode.min.js', ok: function () { return window.Html5Qrcode; } },
-    chart: { u: 'lib/chart.umd.js', ok: function () { return window.Chart; } },
+    scan: { u: 'lib/html5-qrcode.min.js', f: ['https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js', 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js'], ok: function () { return window.Html5Qrcode; } },
+    chart: { u: 'lib/chart.umd.js', f: ['https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js'], ok: function () { return window.Chart; } },
     qrcode: { u: 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js', ok: function () { return window.QRCode; } },
-    pdf: { u: 'lib/jspdf.umd.min.js', ok: function () { return window.jspdf; } }
+    pdf: { u: 'lib/jspdf.umd.min.js', f: ['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'], ok: function () { return window.jspdf; } }
 };
 function loadLib(k) {
     var L = LIBS[k];
@@ -972,7 +972,18 @@ function loadLib(k) {
         return Promise.resolve(true);
     if (L.p)
         return L.p;
-    return L.p = new Promise(function (res) { var s = document.createElement('script'); s.src = L.u; s.onload = function () { return res(!!L.ok()); }; s.onerror = function () { L.p = null; res(false); }; document.head.appendChild(s); });
+    var urls = [L.u].concat(L.f || []);
+    return L.p = new Promise(function (res) {
+        var i = 0;
+        (function next() {
+            if (i >= urls.length) { L.p = null; res(false); return; }
+            var s = document.createElement('script');
+            s.src = urls[i++];
+            s.onload = function () { if (L.ok()) res(true); else { s.remove(); next(); } };
+            s.onerror = function () { s.remove(); next(); };
+            document.head.appendChild(s);
+        })();
+    });
 }
 function loadAssets() {
     return fetch('assets/logo.jpg').then(function (r) { return r.blob(); }).then(function (b) {
