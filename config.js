@@ -1,4 +1,4 @@
 // Paste your Apps Script Web App URL (Deploy > Manage deployments > Web app URL, ends with /exec)
 window.SMART_CONFIG = {
-  API_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE'
+  API_URL: 'https://script.google.com/macros/s/AKfycbzVesFuXZJeQqHZ9GamXDikVaaTJQgNS5Mt6oCy7A5k7AENxrQuxET-UOdnmelrNDaI3Q/exec'
 };
