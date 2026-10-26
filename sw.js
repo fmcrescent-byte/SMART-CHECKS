@@ -1,5 +1,5 @@
 // Smart Check service worker: instant repeat loads for static files. API calls (Apps Script) are never cached.
-const V = 'smart-check-v3';
+const V = 'smart-check-v5';
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim()));
